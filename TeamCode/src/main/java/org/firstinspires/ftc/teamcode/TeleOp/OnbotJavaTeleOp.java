@@ -81,7 +81,7 @@ public class OnbotJavaTeleOp extends OpMode {
         drive();
 
         intakeChange(gamepad1.leftBumperWasPressed());
-        /*
+
         shooterChange(gamepad1.rightTriggerWasPressed());
         if (gamepad1.dpadUpWasPressed()) {
             shooterVel += 1;
@@ -92,7 +92,6 @@ public class OnbotJavaTeleOp extends OpMode {
             launchRun = !launchRun;
             shooterChange(true);
         }
-*/
         telemetry.addData("shooter vel", shooterVel +", "+ shooter.getVelocity());
         telemetry.addData("intake vel", intakeVel +", "+ intake1.getVelocity()+", "+ intake2.getVelocity());
     }
@@ -108,14 +107,12 @@ public class OnbotJavaTeleOp extends OpMode {
             intakeRun = !intakeRun;
         }
     }
-    /*
     void shooterChange(boolean changeLaunch) {
         if (changeLaunch) {
             launchRun = !launchRun;
             shooter.setVelocity( (launchRun==true) ? shooterVel : -5 );
         }
     }
-    */
     void setIntake(double speed) {
         intake1.setVelocity( speed );
         intake2.setVelocity( speed );
