@@ -27,9 +27,9 @@ public class AdjacentAuton extends OpMode {
     private Follower follower;
     private final PoseFactory p = PoseFactory.degrees();
 
-    // TODO: Replace with measured field coordinates
-    private final Pose startPose = p.of(0, 0, 0);
-    private final Pose endPose = p.of(0, 0, 0);
+    // TODO: Replace with measured field coordinates. ya ik its not the center of the robot but the corner..
+    private final Pose startPose = p.of(0, 141.5, 0);
+    private final Pose endPose = p.of(10, 141.5-24, 0);
     private Path path;
 
 

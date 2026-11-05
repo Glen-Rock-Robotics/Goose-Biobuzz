@@ -43,9 +43,8 @@ public class OnbotJavaTeleOp extends OpMode {
 
         //
 
-        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
         backLeft.setDirection(DcMotor.Direction.REVERSE);
-        backRight.setDirection(DcMotor.Direction.REVERSE);
 
         shooter.setDirection(DcMotor.Direction.FORWARD);
 
