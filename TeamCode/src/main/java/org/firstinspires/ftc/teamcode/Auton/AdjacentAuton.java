@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.Auton;
 
-import com.pedropathing.ivy.Command;
+import com.pedropathing.follower.FollowerLog;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -8,10 +8,9 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.api.PoseFactory;
 import com.pedropathing.math.Pose;
 
-import static com.pedropathing.api.Paths.*;
-
 import com.pedropathing.paths.Path;
 
+import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 import static com.pedropathing.api.Paths.line;
@@ -21,22 +20,19 @@ import com.pedropathing.ivy.Scheduler;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
-@Autonomous(name = "AdjacentAuton", group = "")
+@Autonomous(name = "corner -> MOVE RIGHT -> zone", group = "")
 public class AdjacentAuton extends OpMode {
 
     private Follower follower;
-    private final PoseFactory p = PoseFactory.degrees();
-
-    // TODO: Replace with measured field coordinates. ya ik its not the center of the robot but the corner..
-    private final Pose startPose = p.of(0, 141.5, 0);
-    private final Pose endPose = p.of(10, 141.5-24, 0);
-    private Path path;
-
+    private final Pose startPose = Robot.cornerPose;
+    private final Pose endPose = Robot.launchZoneFarPose;
 
     // Path methods
-    private Path park() {
-        return line(startPose, endPose).linear(startPose, endPose);
+    private Path moveToLaunchZone() {
+        return line(startPose, endPose)
+                .linear(startPose, endPose);
     }
+
     @Override
     public void init() {
         Scheduler.reset();
@@ -51,7 +47,7 @@ public class AdjacentAuton extends OpMode {
 
     @Override
     public void start() {
-        schedule(follow(follower, park()));
+        schedule(follow(follower, moveToLaunchZone()));
         /*
         sequential(
                 follow(follower, startToScore()),
@@ -66,13 +62,34 @@ public class AdjacentAuton extends OpMode {
         follower.update();
         Scheduler.execute();
 
-        telemetry.addData("X", follower.pose().x());
-        telemetry.addData("Y", follower.pose().y());
+        Pose current = follower.pose();
+        telemetry.addData("X", current.x());
+        telemetry.addData("Y", current.y());
         telemetry.addData("Heading",
-                Math.toDegrees(follower.pose().heading()));
+                Math.toDegrees(current.heading()));
+
         telemetry.addData("Follower Mode", follower.mode());
         telemetry.addData("Busy", follower.isBusy());
+        telemetry.addData("Path completion", follower.completion());
+        telemetry.addData("Distance remaining in path",
+                follower.remainingDistance());
+
+
+        /*
+        FollowerLog debug = follower.debug();
+        telemetry.addData("overall",debug.toString());
+        telemetry.addData("drivetrain",debug.drivetrain().toString());
+        telemetry.addData("algorithm",debug.algorithm().toString());
+        telemetry.addData("localizer",debug.localizer().toString());
+        // for more go to "logging" pedro page
+        */
 
         telemetry.update();
+    }
+    @Override
+    public void stop() {
+        if (follower != null) {
+            Robot.teleOpStartPose = follower.pose();
+        }
     }
 }

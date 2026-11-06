@@ -1,10 +1,14 @@
 package org.firstinspires.ftc.teamcode.TeleOp;
 
-import com.pedropathing.drivetrain.DrivePowers;
+import static com.pedropathing.api.Paths.line;
+import static com.pedropathing.ivy.pedro.PedroCommands.follow;
+
 import com.pedropathing.follower.Follower;
-import com.pedropathing.follower.ManualDrive;
+import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import static com.pedropathing.ivy.Scheduler.schedule;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -21,7 +25,7 @@ import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.Robot.State;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
-@TeleOp(name = "Main TeleOp", group = "")
+@TeleOp(name = "Main", group = "")
 public class MainTeleOp extends CommandOpMode {
     public Robot robot;
     public GamepadEx driver;
@@ -29,12 +33,15 @@ public class MainTeleOp extends CommandOpMode {
     // gamepad
     private Trigger leftTrigger;
     private Trigger rightTrigger;
+    private GamepadButton start;
     private GamepadButton circle;
+    private GamepadButton square;
     private GamepadButton leftBumper;
     private GamepadButton rightBumper;
     private GamepadButton dpadUp;
     private GamepadButton dpadDown;
     // Commands
+    private InstantCommand relocalize;
     private InstantCommand prep;
     private InstantCommand in;
 
@@ -46,10 +53,10 @@ public class MainTeleOp extends CommandOpMode {
     private DcMotorEx backRight = null;
     @Override
     public void initialize() {
-        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
-        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
-        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "FL");
+        frontRight = hardwareMap.get(DcMotorEx.class, "FR");
+        backLeft = hardwareMap.get(DcMotorEx.class, "BL");
+        backRight = hardwareMap.get(DcMotorEx.class, "BR");
 
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
         backLeft.setDirection(DcMotor.Direction.REVERSE);
@@ -58,7 +65,12 @@ public class MainTeleOp extends CommandOpMode {
 
 
         // initialize
+
         follower = Constants.create(hardwareMap);
+        follower.setPose(Robot.teleOpStartPose);
+        follower.update();
+        //*/
+
         robot = new Robot(hardwareMap);
         driver = new GamepadEx(gamepad1);
 
@@ -67,9 +79,14 @@ public class MainTeleOp extends CommandOpMode {
         leftTrigger = new Trigger(() -> gamepad1.left_trigger > 0.5);
         rightTrigger = new Trigger(() -> gamepad1.right_trigger > 0.5);
         circle = driver.getGamepadButton(GamepadKeys.Button.CIRCLE);
-        leftBumper = driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER);
+        square = driver.getGamepadButton(GamepadKeys.Button.SQUARE);
+        start = driver.getGamepadButton(GamepadKeys.Button.START);
+        //leftBumper = driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER);
         rightBumper = driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER);
 
+        relocalize = new InstantCommand(
+                () -> follower.setPose(Robot.cornerPose) // overrides our pose
+        );
         prep = new InstantCommand(
                 () -> {
                     robot.setState(State.PREPPING);
@@ -85,6 +102,15 @@ public class MainTeleOp extends CommandOpMode {
                 robot.intake
         );
 
+        // start: localize
+        //start.whenPressed(relocalize);
+        /*
+        driver.getGamepadButton(GamepadKeys.Button.TRIANGLE).whenPressed(new InstantCommand(
+                () -> alignToHive()
+        ));
+        */
+
+
         // circle: start intake
         circle.whenPressed(in);
         // left trigger: spit when held, intakes when released
@@ -95,8 +121,8 @@ public class MainTeleOp extends CommandOpMode {
                 },
                 robot.intake
         )).whenInactive(in);
-        // left bumper: toggle flower
-        leftBumper.whenPressed(new InstantCommand(
+        // square: toggle flower
+        square.whenPressed(new InstantCommand(
                 () -> robot.intake.flowerToggle(),
                 robot.intake
         ));
@@ -117,10 +143,10 @@ public class MainTeleOp extends CommandOpMode {
 
         // change shooter velocity with dpad
         dpadUp.whenPressed(new InstantCommand(
-            () -> robot.shooter.changeTargetVelocity(1), robot.shooter
+            () -> robot.shooter.changeTargetVelocity(.05), robot.shooter
         ));
         dpadDown.whenPressed(new InstantCommand(
-            () -> robot.shooter.changeTargetVelocity(-1), robot.shooter
+            () -> robot.shooter.changeTargetVelocity(-.05), robot.shooter
         ));
 
         // telemetry
@@ -130,7 +156,18 @@ public class MainTeleOp extends CommandOpMode {
     @Override
     public void run() {
         super.run();
-        drive();
+
+
+        drive();///////
+        /*
+        Scheduler.execute();
+        if (!follower.following()) {
+            drive();
+        }
+        follower.update();
+         */
+
+
         if (robot.shooter.isRunning()) {
             robot.setState( (robot.shooter.checkReady()) ? State.READY : State.PREPPING );
         }
@@ -169,27 +206,38 @@ public class MainTeleOp extends CommandOpMode {
         backRight.setPower(backRightPower);
 
         /*
-        follower.manual(
+        DrivePowers powers = new DrivePowers(
                 y,
                 x,
                 rx
         );
-        follower.update();
-        */
-        /*
+        //OR (robot or field-centric?)
         DrivePowers powers = ManualDrive.fieldCentric(
-                -gamepad1.left_stick_y,
-                gamepad1.left_stick_x,
-                gamepad1.right_stick_x,
+                y,
+                x,
+                rx,
                 follower.pose().heading()
         );
+
         follower.manual(powers);
+        //OR (hold or not hold position?)
+        ManualDrive.driveOrHold(follower, powers);
+
         follower.update();
-        */
+         */
 
         Pose robotPose = follower.pose(); // returns a Pose object
         telemetry.addData("Robot X", robotPose.x());
         telemetry.addData("Robot Y", robotPose.y());
         telemetry.addData("Robot Heading", Math.toDegrees(robotPose.heading()));
+    }
+    private void alignToHive() {
+        Pose currentPose = follower.pose();
+        Pose targetPose = Robot.initialCellAimPose;
+
+        Path alignmentPath = line(currentPose, targetPose)
+                .linear(currentPose, targetPose);
+
+        Scheduler.schedule(follow(follower, alignmentPath));
     }
 }

@@ -8,12 +8,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-@TeleOp(name = "onbotjava code", group = "")
+@TeleOp(name = "OnBotJava", group = "")
 //@Disabled
 public class OnbotJavaTeleOp extends OpMode {
     //
-    double shooterVel = 62;
-    final double intakeVel = 100;
+    double shooterVel = .75;
+    final double intakeVel = 1;
 
     //
     boolean launchRun = false;
@@ -32,10 +32,10 @@ public class OnbotJavaTeleOp extends OpMode {
 
     @Override
     public void init() {
-        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
-        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
-        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "FL");
+        frontRight = hardwareMap.get(DcMotorEx.class, "FR");
+        backLeft = hardwareMap.get(DcMotorEx.class, "BL");
+        backRight = hardwareMap.get(DcMotorEx.class, "BR");
 
         shooter = hardwareMap.get(DcMotorEx.class, "shooter");
         intake1 = hardwareMap.get(DcMotorEx.class, "intake1");
@@ -84,11 +84,11 @@ public class OnbotJavaTeleOp extends OpMode {
 
         shooterChange(gamepad1.rightTriggerWasPressed());
         if (gamepad1.dpadUpWasPressed()) {
-            shooterVel += 1;
+            shooterVel += .05;
             launchRun = !launchRun;
             shooterChange(true);
         } else if (gamepad1.dpadDownWasPressed()) {
-            shooterVel -= 1;
+            shooterVel -= .05;
             launchRun = !launchRun;
             shooterChange(true);
         }
@@ -102,20 +102,20 @@ public class OnbotJavaTeleOp extends OpMode {
 
     void intakeChange(boolean changeIntake) {
         if (changeIntake) {
-            intake1.setVelocity( (intakeRun == true) ? 0 : intakeVel );
-            intake2.setVelocity( (intakeRun == true) ? 0 : intakeVel );
+            intake1.setPower( (intakeRun == true) ? 0 : intakeVel );
+            intake2.setPower( (intakeRun == true) ? 0 : intakeVel );
             intakeRun = !intakeRun;
         }
     }
     void shooterChange(boolean changeLaunch) {
         if (changeLaunch) {
             launchRun = !launchRun;
-            shooter.setVelocity( (launchRun==true) ? shooterVel : -5 );
+            shooter.setPower( (launchRun==true) ? shooterVel : 0 );
         }
     }
     void setIntake(double speed) {
-        intake1.setVelocity( speed );
-        intake2.setVelocity( speed );
+        intake1.setPower( speed );
+        intake2.setPower( speed );
         intakeRun = !intakeRun;
     }
     void drive() {

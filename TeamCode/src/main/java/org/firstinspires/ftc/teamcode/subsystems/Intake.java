@@ -12,7 +12,7 @@ public class Intake extends SubsystemBase {
     private final MotorEx intakeR;
     private final ServoEx flower;
 
-    private static final double velocity = 100;
+    private static final double velocity = 1;
 
     private boolean flowerDown = false;
 
@@ -45,12 +45,12 @@ public class Intake extends SubsystemBase {
     }
 
     public void in() {
-        intakeL.setVelocity(velocity);
-        intakeR.setVelocity(velocity);
+        intakeL.set(velocity);
+        intakeR.set(velocity);
     }
     public void out() {
-        intakeL.setVelocity(-velocity);
-        intakeR.setVelocity(-velocity);
+        intakeL.set(-velocity);
+        intakeR.set(-velocity);
     }
     public void flowerUp() {
         flower.set(flowerUpAngle);

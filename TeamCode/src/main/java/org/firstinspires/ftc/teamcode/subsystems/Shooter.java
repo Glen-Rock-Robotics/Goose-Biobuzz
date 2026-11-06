@@ -12,8 +12,8 @@ public class Shooter extends SubsystemBase {
 
     private final MotorEx shooter;
 
-    private double targetVelocity = 62;
-    private final double toleranceVelocity = 3;
+    private double targetVelocity = .75;
+    private final double toleranceVelocity = .03;
 
     private boolean running = false;
 
@@ -33,17 +33,17 @@ public class Shooter extends SubsystemBase {
     }
 
     public void spin() {
-        shooter.setVelocity(targetVelocity);
+        shooter.set(targetVelocity);
         running = true;
     }
     public void stop() {
-        shooter.setVelocity(0);
+        shooter.set(0);
         running = false;
     }
     public void setTargetVelocity(double vel) {
         targetVelocity = vel;
         if (running) {
-            shooter.setVelocity(targetVelocity);
+            shooter.set(targetVelocity);
         }
     }
     public void changeTargetVelocity(double velChange) {
